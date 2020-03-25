@@ -10,11 +10,15 @@ from scipy.ndimage import binary_fill_holes
 from skimage.measure import label, regionprops
 from tensorflow.python.keras import backend as K
 from tensorflow.python.keras.preprocessing import image
+from skimage.io import imread, imshow
+from skimage.filters import gaussian, threshold_otsu
+from skimage import measure
+import matplotlib.pyplot as plt
+import numpy as np
 
 
 def pro_process(temp_img, input_size):
     img = np.asarray(temp_img).astype('float32')
-    # img = np.array(Image.fromarray(img).resize((input_size, input_size)).convert(3))
     img = np.array(Image.fromarray(img, mode='RGB').resize((input_size, input_size)))
     return img
 
@@ -40,13 +44,17 @@ def BW_img(input, thresholding):
         binary = input > thresholding
     else:
         binary = input > input.max() / 2.0
-
+#     fig, ax = plt.subplots(1)
+#     ax.imshow(binary, cmap=plt.cm.gray)
+    #plt.show(fig)
     label_image = label(binary)
     regions = regionprops(label_image)
     area_list = [region.area for region in regions]
+    #print(area_list,np.argmax(area_list),np.unique(binary))
     if area_list:
         idx_max = np.argmax(area_list)
         binary[label_image != idx_max + 1] = 0
+
     return binary_fill_holes(np.asarray(binary).astype(int))
 
 
@@ -99,6 +107,34 @@ def disc_crop(org_img, DiscROI_size, C_x, C_y):
 
     return disc_region, err_coord, crop_coord
 
+def disc_crop_2(org_img, DiscROI_size, C_x, C_y):
+    tmp_size = int(DiscROI_size / 2)
+    disc_region = np.zeros((DiscROI_size, DiscROI_size, 2), dtype=org_img.dtype)
+    crop_coord = np.array([C_x - tmp_size, C_x + tmp_size, C_y - tmp_size, C_y + tmp_size], dtype=int)
+    err_coord = [0, DiscROI_size, 0, DiscROI_size]
+
+    if crop_coord[0] < 0:
+        err_coord[0] = abs(crop_coord[0])
+        crop_coord[0] = 0
+
+    if crop_coord[2] < 0:
+        err_coord[2] = abs(crop_coord[2])
+        crop_coord[2] = 0
+
+    if crop_coord[1] > org_img.shape[0]:
+        err_coord[1] = err_coord[1] - (crop_coord[1] - org_img.shape[0])
+        crop_coord[1] = org_img.shape[0]
+
+    if crop_coord[3] > org_img.shape[1]:
+        err_coord[3] = err_coord[3] - (crop_coord[3] - org_img.shape[1])
+        crop_coord[3] = org_img.shape[1]
+
+    disc_region[err_coord[0]:err_coord[1], err_coord[2]:err_coord[3], ] = org_img[
+                                                                          crop_coord[0]:crop_coord[1],
+                                                                          crop_coord[2]:crop_coord[3],
+                                                                          ]
+
+    return disc_region, err_coord, crop_coord
 
 def mk_dir(dir_path):
     if not os.path.exists(dir_path):

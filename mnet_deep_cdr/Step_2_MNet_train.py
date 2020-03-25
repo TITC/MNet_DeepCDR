@@ -43,9 +43,9 @@ loss_max = 10000
 for idx_iter in range(Total_iter):
     random.shuffle(train_list)
     model_return = my_model.fit_generator(
-        generator=train_loader(train_list, train_data_path, train_mask_path, input_size),
+        generator=train_loader_2(train_list, train_data_path, train_mask_path, input_size),
         steps_per_epoch=len(train_list),
-        validation_data=train_loader(val_list, val_data_path, val_mask_path, input_size),
+        validation_data=train_loader_2(val_list, val_data_path, val_mask_path, input_size),
         validation_steps=len(train_list),
         verbose=0
     )

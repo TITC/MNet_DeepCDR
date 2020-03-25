@@ -38,20 +38,6 @@ def train_loader(data_list, data_path, mask_path, input_size):
             img_mask = np.reshape(img_mask, (1,) + img_mask.shape)
             yield ([train_img], [img_mask, img_mask, img_mask, img_mask, img_mask])
 
-def train_loader_2(data_list, data_path, mask_path, input_size):
-    while 1:
-        for lineIdx, temp_txt in enumerate(data_list):
-            train_img = np.asarray(image.load_img(os.path.join(data_path, temp_txt),
-                                                  target_size=(input_size, input_size, 3))
-                                   ).astype('float32')
-            img_mask = np.asarray(
-                image.load_img(os.path.join(mask_path, temp_txt),
-                               target_size=(input_size, input_size, 2))
-            ) / 255.0
-
-            train_img = np.reshape(train_img, (1,) + train_img.shape)
-            img_mask = np.reshape(img_mask, (1,) + img_mask.shape)
-            yield ([train_img], [img_mask, img_mask, img_mask, img_mask, img_mask])
 
 def BW_img(input, thresholding):
     if input.max() > thresholding:
@@ -95,35 +81,6 @@ def dice_coef_loss(y_true, y_pred):
 def disc_crop(org_img, DiscROI_size, C_x, C_y):
     tmp_size = int(DiscROI_size / 2)
     disc_region = np.zeros((DiscROI_size, DiscROI_size, 3), dtype=org_img.dtype)
-    crop_coord = np.array([C_x - tmp_size, C_x + tmp_size, C_y - tmp_size, C_y + tmp_size], dtype=int)
-    err_coord = [0, DiscROI_size, 0, DiscROI_size]
-
-    if crop_coord[0] < 0:
-        err_coord[0] = abs(crop_coord[0])
-        crop_coord[0] = 0
-
-    if crop_coord[2] < 0:
-        err_coord[2] = abs(crop_coord[2])
-        crop_coord[2] = 0
-
-    if crop_coord[1] > org_img.shape[0]:
-        err_coord[1] = err_coord[1] - (crop_coord[1] - org_img.shape[0])
-        crop_coord[1] = org_img.shape[0]
-
-    if crop_coord[3] > org_img.shape[1]:
-        err_coord[3] = err_coord[3] - (crop_coord[3] - org_img.shape[1])
-        crop_coord[3] = org_img.shape[1]
-
-    disc_region[err_coord[0]:err_coord[1], err_coord[2]:err_coord[3], ] = org_img[
-                                                                          crop_coord[0]:crop_coord[1],
-                                                                          crop_coord[2]:crop_coord[3],
-                                                                          ]
-
-    return disc_region, err_coord, crop_coord
-
-def disc_crop_2(org_img, DiscROI_size, C_x, C_y):
-    tmp_size = int(DiscROI_size / 2)
-    disc_region = np.zeros((DiscROI_size, DiscROI_size, 2), dtype=org_img.dtype)
     crop_coord = np.array([C_x - tmp_size, C_x + tmp_size, C_y - tmp_size, C_y + tmp_size], dtype=int)
     err_coord = [0, DiscROI_size, 0, DiscROI_size]
 

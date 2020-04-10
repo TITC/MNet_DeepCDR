@@ -69,7 +69,7 @@ def dice_coef(y_true, y_pred):
 def dice_coef2(y_true, y_pred):
     score0 = dice_coef(y_true[:, :, :, 0], y_pred[:, :, :, 0])
     score1 = dice_coef(y_true[:, :, :, 1], y_pred[:, :, :, 1])
-    score = 0.5 * score0 + 0.5 * score1
+    score = 0.2 * score0 + 0.8 * score1
 
     return score
 
